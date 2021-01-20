@@ -1,4 +1,4 @@
-from crawl import Link_crawler
+from crawl import LinkCrawler, DataCrawler
 import sys
 from config import BASE_LINK
 
@@ -7,7 +7,10 @@ from config import BASE_LINK
 
 if __name__ == "__main__":
     link = BASE_LINK
-    crawler = Link_crawler(link, cities=['london', 'munich'])
+
+    # crawler = LinkCrawler(link, cities=['london', 'munich'])
+
+    crawler = DataCrawler()
     crawler.start()
     
-    # print()
+    

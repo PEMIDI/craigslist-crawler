@@ -2,6 +2,7 @@ import requests
 import json
 from abc import ABC, abstractmethod
 from bs4 import BeautifulSoup
+from parser import AdvertisementParser
 
 class BaseCrawler(ABC):
 
@@ -13,6 +14,14 @@ class BaseCrawler(ABC):
     def store(self):
         pass
 
+    @staticmethod
+    def get(url):
+        try:
+            response = requests.get(url)
+        except requests.HTTPError:
+            return None
+        return response
+
 
 class LinkCrawler(BaseCrawler):
 
@@ -20,18 +29,9 @@ class LinkCrawler(BaseCrawler):
         self.url = url
         self.cities = cities
 
-    def get_page(self, url, start):
-        try:
-            response = requests.get(url+str(start))
-        except:
-            return None
-
-        print(f"{response.status_code} | {response.url}")
-        return response
-
     def find_links(self, html_doc):
         soup = BeautifulSoup(html_doc, 'html.parser')
-        return soup.findAll('a', attrs={'class':'hdrlnk'})
+        return soup.findAll('a', attrs={'class': 'hdrlnk'})
 
     def crawl_cities(self, url):
         crawl = True
@@ -39,7 +39,7 @@ class LinkCrawler(BaseCrawler):
         adv_link = []
 
         while crawl:
-            response = self.get_page(url, start)
+            response = self.get(url+str(start))
             new_links = self.find_links(response.text)
             adv_link.extend(new_links)
             start += 120
@@ -59,3 +59,27 @@ class LinkCrawler(BaseCrawler):
             adv_links.extend(result)
 
         self.store([li.get('href') for li in adv_links])
+
+
+
+class DataCrawler(BaseCrawler):
+
+    def __init__(self):
+        self.links = self.__load_links()
+        self.parser = AdvertisementParser()
+        
+    @staticmethod    
+    def __load_links():
+        with open('storage/links.json', 'r') as f:
+            result = json.loads(f.read())
+        return result
+
+    def start(self):
+        for li in self.links:
+            response = self.get(li)
+            result = self.parser.parse(response.text)
+            print(result)
+
+    def store(self, data):
+        with open('storage/advs.json', 'w') as f:
+            f.write(json.dumps(data))

@@ -11,7 +11,7 @@ class BaseCrawler(ABC):
         pass
 
     @abstractmethod
-    def store(self):
+    def store(self, data, filename):
         pass
 
     @staticmethod
@@ -47,7 +47,7 @@ class LinkCrawler(BaseCrawler):
 
         return adv_link
 
-    def store(self, data):
+    def store(self, data, *args):
         with open('storage/links.json', 'w') as f:
             f.write(json.dumps(data))
 
@@ -72,14 +72,18 @@ class DataCrawler(BaseCrawler):
     def __load_links():
         with open('storage/links.json', 'r') as f:
             result = json.loads(f.read())
+            print(f"{result} \n")
         return result
 
-    def start(self):
+    def start(self, store = False):
         for li in self.links:
             response = self.get(li)
-            result = self.parser.parse(response.text)
-            print(result)
+            data = self.parser.parse(response.text)
+            if store:
+                self.store(data, data.get('post_id', 'sample'))
 
-    def store(self, data):
-        with open('storage/advs.json', 'w') as f:
+    def store(self, data, filename):
+        with open(f'storage/advs/{filename}.json', 'w') as f:
             f.write(json.dumps(data))
+            print(f"saved in {filename}")
+        print('finished')

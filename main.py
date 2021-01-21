@@ -11,6 +11,5 @@ if __name__ == "__main__":
     # crawler = LinkCrawler(link, cities=['london', 'munich'])
 
     crawler = DataCrawler()
-    crawler.start()
-    
+    crawler.start(store=True)
     

@@ -48,7 +48,7 @@ class LinkCrawler(BaseCrawler):
         return adv_link
 
     def store(self, data, *args):
-        with open('storage/links.json', 'w') as f:
+        with open('fixtures/links.json', 'w') as f:
             f.write(json.dumps(data))
 
     def start(self):
@@ -70,7 +70,7 @@ class DataCrawler(BaseCrawler):
         
     @staticmethod    
     def __load_links():
-        with open('storage/links.json', 'r') as f:
+        with open('fixtures/links.json', 'r') as f:
             result = json.loads(f.read())
             print(f"{result} \n")
         return result
@@ -83,7 +83,7 @@ class DataCrawler(BaseCrawler):
                 self.store(data, data.get('post_id', 'sample'))
 
     def store(self, data, filename):
-        with open(f'storage/advs/{filename}.json', 'w') as f:
+        with open(f'fixtures/advs/{filename}.json', 'w') as f:
             f.write(json.dumps(data))
             print(f"saved in {filename}")
         print('finished')

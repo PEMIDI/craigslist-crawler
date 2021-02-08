@@ -4,6 +4,7 @@ from pymongo import MongoClient
 class MongoDatabase:
     instance = None
 
+    @classmethod
     def __new__(cls, *args, **kwargs):
         if cls.instance is None:
             cls.instance = super().__new__(*args, **kwargs)

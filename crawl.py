@@ -6,6 +6,7 @@ from parser import AdvertisementParser
 from storage import MongoStore, FileStore
 from config import STORAGE_TYPE
 
+
 class BaseCrawler(ABC):
 
     def __init__(self):
@@ -42,7 +43,8 @@ class LinkCrawler(BaseCrawler):
         self.cities = cities
         super().__init__()
 
-    def find_links(self, html_doc):
+    @staticmethod
+    def find_links(html_doc):
         soup = BeautifulSoup(html_doc, 'html.parser')
         return soup.findAll('a', attrs={'class': 'hdrlnk'})
 
@@ -61,7 +63,7 @@ class LinkCrawler(BaseCrawler):
         return adv_link
 
     def store(self, data, *args):
-        self.storage.store(data, 'data')
+        self.storage.store(data, 'adv_links')
 
     def start(self):
         adv_links = []
@@ -70,30 +72,26 @@ class LinkCrawler(BaseCrawler):
             print(f"{city} | {len(result)}")
             adv_links.extend(result)
 
-        self.store([li.get('href') for li in adv_links])
-
+        self.store([{'url': li.get('href'), 'flag': 'False'} for li in adv_links])
 
 
 class DataCrawler(BaseCrawler):
 
     def __init__(self):
+        super().__init__()
         self.links = self.__load_links()
         self.parser = AdvertisementParser()
-        super().__init__()
-        
-    @staticmethod    
-    def __load_links():
-        with open('fixtures/links.json', 'r') as f:
-            result = json.loads(f.read())
-            print(f"{result} \n")
-        return result
 
-    def start(self, store = False):
+    def __load_links(self):
+        return self.storage.load()
+
+    def start(self, store=False):
         for li in self.links:
-            response = self.get(li)
+            response = self.get(li['url'])
             data = self.parser.parse(response.text)
             if store:
-                self.store(data, data.get('post_id', 'sample'))
+                self.store(data, 'adv_data')
+            self.storage.update_flag(li)
 
     def store(self, data, filename):
-        self.storage.store(filename, data)
+        self.storage.store(data, filename)

@@ -21,6 +21,21 @@ class MongoStore(StorageAbstract):
         else:
             collection.insert_one(data)
 
+    def load(self):
+        return self.mongo.database.adv_links.find({'flag': 'False'})
+
+    def update_flag(self, data):
+        """
+        get a link with flag=False variable, and change flag to True
+
+        :param data: a data with url parameter
+        :return: Flag:True
+        """
+        return self.mongo.database.adv_links.find_one_and_update(
+            {'_id': data['_id']},
+            {'$set': {'flag': 'True'}}
+        )
+
 
 class FileStore(StorageAbstract):
 
@@ -29,5 +44,15 @@ class FileStore(StorageAbstract):
             f.write(json.dumps(data))
             print(f"saved in {filename}")
         print('finished')
+
+    @staticmethod
+    def load():
+        with open('fixtures/links.json', 'r') as f:
+            result = json.loads(f.read())
+            print(f"{result} \n")
+        return result
+
+    def update_flag(self):
+        pass
 
 

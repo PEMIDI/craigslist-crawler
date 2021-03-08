@@ -30,7 +30,7 @@ class BaseCrawler(ABC):
     @staticmethod
     def get(url):
         try:
-            response = requests.get(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"})
+            response = requests.get(url)
         except requests.HTTPError:
             return None
         return response
@@ -72,7 +72,7 @@ class LinkCrawler(BaseCrawler):
             print(f"{city} | {len(result)}")
             adv_links.extend(result)
 
-        self.store([{'url': li.get('href'), 'flag': 'False'} for li in adv_links])
+        self.store([{'url': li.get('href'), 'flag': False} for li in adv_links])
 
 
 class DataCrawler(BaseCrawler):
@@ -95,3 +95,44 @@ class DataCrawler(BaseCrawler):
 
     def store(self, data, filename):
         self.storage.store(data, filename)
+
+
+class ImageDownloader(BaseCrawler):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.advertisements = self.__load_advertisements()
+
+    def __load_advertisements(self):
+        return self.storage.load('adv_data')
+
+    @staticmethod
+    def get(link):
+        try:
+            response = requests.get(link, stream=True)
+        except requests.HTTPError:
+            return None
+        return response
+
+    def start(self, store=True):
+        for advertisements in self.advertisements:
+            counter = 1
+            for image in advertisements['images']:
+                response = self.get(image['url'])
+                if store:
+                    self.store(response, advertisements['post_id'], counter)
+                counter += 1
+
+    def store(self, data, adv_id, img_number):
+        filename = f"{adv_id}-{img_number}"
+        return self.save_to_disk(data, filename)
+
+    @staticmethod
+    def save_to_disk(response, filename):
+        with open(f'fixtures/images/{filename}.jpg', 'ab') as f:
+            f.write(response.content)
+            for _ in response.iter_content():
+                f.write(response.content)
+
+        print(filename)
+        return filename

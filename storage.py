@@ -8,6 +8,10 @@ class StorageAbstract(ABC):
     def store(self, data, *args):
         pass
 
+    @abstractmethod
+    def load(self, *args, **kwargs):
+        pass
+
 
 class MongoStore(StorageAbstract):
 
@@ -21,8 +25,13 @@ class MongoStore(StorageAbstract):
         else:
             collection.insert_one(data)
 
-    def load(self):
-        return self.mongo.database.adv_links.find({'flag': 'False'})
+    def load(self, collection_name, filter_data=None):
+        collection = self.mongo.database[collection_name]
+        if filter_data is not None:
+            data = collection.find(filter_data)
+        else:
+            data = collection.find()
+        return data
 
     def update_flag(self, data):
         """

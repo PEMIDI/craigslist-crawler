@@ -31,13 +31,20 @@ class AdvertisementParser():
         post_id_selection = 'body > section > section > section > div.postinginfos > p:nth-child(1)'
         post_id_tag = self.soup.select_one(post_id_selection)
         if post_id_tag:
-            return post_id_tag.text.replace('post id: ','')
+            return post_id_tag.text.replace('post id: ', '')
         return None
+
+    @property
+    def images(self):
+        images_list = self.soup.find_all('img')
+        images_sources = set([img.attrs['src'].replace('50x50c', '600x450') for img in images_list])
+        return [{"url": src, 'flag': False} for src in images_sources]
+
 
     def parse(self, html_data):
         self.soup = BeautifulSoup(html_data, 'html.parser')
         data = {
-            'title': self.title, 'price': self.price, 'post_id': self.post_id
+            'title': self.title, 'price': self.price, 'post_id': self.post_id, 'images': self.images
         }
         return data
 
